@@ -11,8 +11,6 @@
     testing<-read.csv("pml-testing.csv",stringsAsFactors = FALSE)
     
     training$classe=as.factor(training$classe)
-    training$user_name=as.factor(training$user_name)
-    training$new_window=as.factor(training$new_window)
     
     
 # Exploring the data
@@ -34,90 +32,68 @@
    training_set<-training_sub[,names(BCols[BCols<1000])]
    str(training_set)
    
- # Removing raw timestamp columns
+ # Removing raw timestamp and name columns
+   remCols<-c("X","user_name","raw_timestamp_part_1","raw_timestamp_part_2",
+              "cvtd_timestamp","new_window")
+   training_set<-training_set[,!(names(training_set) %in% remCols)]
 
  # Removing same cols from testing set
    dim(testing)
-   testing_set<-subset(testing,select = names(training_set[,-c(60)]))
-   names(training)==names(testing)
+   testing_set<-subset(testing,select = c(names(training_set[,-c(54)]),"problem_id"))
+
+   str(testing_set)
    
  # Creating own training and testing sets
-   set.seed(111016)
+   set.seed(1234)
    inTrain = createDataPartition(training_set$classe, p = 3/4)[[1]]
    p_training = training_set[ inTrain,]
    p_testing = training_set[-inTrain,]
 
 # Modeling
-   set.seed(111016)
+   set.seed(1234)
    library(caret)
    library(gbm)
    library(C50)
    library(doParallel)
    trainctrl<-trainControl(method="repeatedcv"
-                           ,number=10,repeats = 5
+                           ,number=10,repeats = 3
                            ,verboseIter = FALSE
                            ,allowParallel = TRUE)
-   preprocess<-c("center", "scale")
+   
+   # preprocess<-c("center", "scale")
+   # myTuneGrid <- expand.grid(n.trees = 1:100,interaction.depth = 2:4,shrinkage = 0.1)
    
    cl <- makeCluster(detectCores()-1)
    registerDoParallel(cl)
-  
-  
-   # Random Forest Model
-   model.rf<-train(form = classe~.,
-                   model = "rf",
-                   data = p_training,
-                   metric="Accuracy",
-                   preProcess = preprocess,
-                   trControl = trainctrl,
-                   verbose=TRUE
-                   )
    
    # Gradient Boosting Model
+   registerDoParallel(cl)
    model.gbm<-train(form = classe~.,
                    model = "gbm",
                    data = p_training,
                    metric="Accuracy",
-                   preProcess = preprocess,
+                   #preProcess = preprocess,
+                   #tuneGrid = myTuneGrid,
                    trControl = trainctrl,
                    verbose=TRUE
    )
-  
-   # Linear Discriminant Analysis
-   model.lda<-train(form = classe~.,
-                    model = "lda",
-                    data = p_training,
-                    metric="Accuracy",
-                    preProcess = preprocess,
-                    trControl = trainctrl,
-                    verbose=TRUE
-   )
-   
-   # summarize results
-   bagging_results <- resamples(list(rf=model.rf, gbm=model.gbm,lda=model.lda))
-   summary(bagging_results)
-   dotplot(bagging_results)
-   
-   # Predictions
-   pred.rf<-predict(model.rf,p_testing)
-   confusionMatrix(p_testing$classe,pred.rf)$overall[1]
-   pred.gbm<-predict(model.gbm,p_testing)
-   confusionMatrix(p_testing$classe,pred.gbm)$overall[1]
-   pred.lda<-predict(model.lda,p_testing)
-   confusionMatrix(p_testing$classe,pred.lda)$overall[1]
-   
-   # combined model using C5.0
-   data.comb<-data.frame(rf=pred.rf,gbm=pred.gbm,lda=pred.lda,classe=p_testing$classe)
-   
-   model.combo<-train(form = classe~.,
-                         model = "C5.0",
-                         data = data.comb,
-                         metric="Accuracy",
-                         preProcess = preprocess,
-                         trControl = trainctrl,
-                         verbose=TRUE
-   )
-   pred.combo<-predict(model.combo,data.comb)
    stopCluster(cl)
-   confusionMatrix(p_testing$classe,pred.combo)$overall[1]
+   summary(model.gbm)
+   print(model.gbm)
+   
+   # Prediction using our testing set
+  
+   pred.gbm<-predict(model.gbm,p_testing)
+   confusionMatrix(p_testing$classe,pred.gbm)
+   
+   
+   # Prediction using the provided testing set
+   pred.test.gbm<-predict(model.gbm,testing_set)
+   summary(pred.test.gbm)
+   
+   testing_pred<-cbind(testing_set,pred.test.gbm)
+   View(testing_pred[,c(54,55)])
+   
+ 
+   
   
