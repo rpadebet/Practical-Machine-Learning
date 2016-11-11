@@ -76,7 +76,7 @@
    registerDoParallel(cl)
    system.time(
    model.fit<-train(form = classe ~ .,
-                   model = "rf",
+                   method = "rf",
                    data = p_training,
                    metric="Accuracy",
                    preProcess = preprocess,
@@ -104,6 +104,42 @@
    
    testing_pred<-cbind(testing_set,pred.test.fit)
    View(testing_pred[,c(54,55)])
+   
+   trainctrlg<-trainControl(method="repeatedcv"
+                           ,number=5,repeats = 3
+                           )
+   
+   library("gbm")
+   preprocess<-c("center", "scale")
+   myGbm<-expand.grid(n.trees = seq(250,1000,100),interaction.depth = 2:4,
+                      shrinkage = 0.05,n.minobsinnode=20)
+   registerDoParallel(cl)
+   system.time(
+       model.gbm<-train(form = classe ~ .,
+                        method = "gbm",
+                        data = p_training,
+                        metric="Accuracy",
+                        preProcess = preprocess,
+                        trControl = trainctrlg,
+                        tuneGrid = myGbm
+       )
+   )
+   stopCluster(cl)
+   summary(model.gbm)
+   print(model.gbm)
+   plot(model.gbm)
+   plot(model.gbm$finalModel)
+   # Prediction using our testing set
+   
+   pred.gbm<-predict(model.gbm,p_testing)
+   confusionMatrix(p_testing$classe,pred.gbm)
+   
+   
+   # Prediction using the provided testing set
+   pred.test.gbm<-predict(model.gbm,testing_set)
+   summary(pred.test.gbm)
+   
+ 
    
  
    
