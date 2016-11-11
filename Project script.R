@@ -14,7 +14,10 @@
     
     
 # Exploring the data
+    dim(training)
     str(training)
+    
+    dim(testing)
     str(testing)
     
 
@@ -45,17 +48,6 @@
    inTrain = createDataPartition(training_set$classe, p = 3/4)[[1]]
    p_training = training_set[ inTrain,]
    p_testing = training_set[-inTrain,]
-   
- # Visually exploring data
-   featurePlot(x = p_training[, 1:16], 
-               y = p_training$classe,
-               plot = "density", 
-               scales = list(x = list(relation="free"), 
-                             y = list(relation="free")), 
-               adjust = 1.5, 
-               pch = "|", 
-               layout = c(4, 4), 
-               auto.key = list(columns = 5))
 
 # Modeling
    set.seed(1234)
@@ -129,6 +121,10 @@
    print(model.gbm)
    plot(model.gbm)
    plot(model.gbm$finalModel)
+   print(model.gbm$finalModel)
+   
+   dotPlot(varImp(model.gbm))
+   confusionMatrix(predict(model.gbm,p_training),p_training$classe)
    # Prediction using our testing set
    
    pred.gbm<-predict(model.gbm,p_testing)
@@ -138,6 +134,8 @@
    # Prediction using the provided testing set
    pred.test.gbm<-predict(model.gbm,testing_set)
    summary(pred.test.gbm)
+   testing_pred<-cbind(testing_set,pred.test.gbm)
+   View(testing_pred[,c(54,55)])
    
  
    
