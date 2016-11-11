@@ -2,7 +2,7 @@
 title: 'Human Activity Recognition: Machine Learning Prediction Assignment'
 author: "Rohit Padebettu"
 date: "11/11/2016"
-output: pdf_document
+output: html_document
 ---
 
 ## Synopsis
