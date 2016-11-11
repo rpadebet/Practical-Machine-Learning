@@ -184,7 +184,7 @@ We can also plot the model iterations and see how the accuracies of each model v
 We can see from the above data and plot that the selected model with 950 trees has an `Accuracy` of about **99.91%** with `Kappa` about **0.9989**
 
 Finally we also plot the `Importance` of attributes in the model for the top 20 or so attributes
-```{r PlotVarImp, echo=TRUE, fig.height=15,fig.width=10,warning=FALSE }
+```{r PlotVarImp, echo=TRUE, fig.height=10,fig.width=7,warning=FALSE }
  dotPlot(varImp(model.gbm))
 ```
 
@@ -210,8 +210,8 @@ Now that we have trained the classifier and also performed an out of sample test
 
 ```{r TestTable, echo=TRUE}
     testing_pred<-cbind(testing_set,pred.test.gbm)
-    kable(head(testing_pred[,c(54,55)],5))
+    kable(t(testing_pred[,c(54,55)]))
 ```
 
 ## Conclusion
-*We began by attempting to build and train a classifier to classify 5 different human activities of six subjects. We used the Stochastic Gradient Bossting model to build the classifier. We tested out a number of iterations of the parameters for the model and performed several cross validations to be able to select the best set of parameters and attributes. The resulting model performed had an accuracy of about 99.91% on the training set and had a perfect classification score on the out of sample testing set. The model was later applied to the unclassified testing set provided and scored a perfect 20/20 there as well!*
+*We began by attempting to build and train a classifier to classify 5 different human activities of six subjects. We used the Stochastic Gradient Boosting model to build the classifier. We tested out a number of iterations of the parameters for the model and performed several cross validations to be able to select the best set of parameters and attributes. The resulting model performed had an accuracy of about 99.91% on the training set and had a perfect classification score on the out of sample testing set. The model was later applied to the unclassified testing set provided and scored a perfect 20/20 there as well!*
