@@ -15,22 +15,21 @@
     
 # Exploring the data
     str(training)
-    dim(training)
-    summary(training)
+    str(testing)
+    
 
 # Cleaning Data       
-# Removing cols with mostly NA's
-   sum(is.na(training$min_roll_belt))
+
+ # Removing cols with mostly NA's
+    
    NACols<-apply(training,MARGIN = 2,FUN = function(X) sum(is.na(X)))
    training_sub<-training[,names(NACols[NACols<1000])]
-   str(training_sub)
    
  # Removing cols with mostly blank characters
-   sum(training$max_yaw_belt=="")
+   
    BlnkCols<-apply(training,MARGIN = 2,FUN = function(X) sum(X==""))
    BCols<-BlnkCols[!is.na(BlnkCols)]
    training_set<-training_sub[,names(BCols[BCols<1000])]
-   str(training_set)
    
  # Removing raw timestamp and name columns
    remCols<-c("X","user_name","raw_timestamp_part_1","raw_timestamp_part_2",
@@ -38,60 +37,72 @@
    training_set<-training_set[,!(names(training_set) %in% remCols)]
 
  # Removing same cols from testing set
-   dim(testing)
-   testing_set<-subset(testing,select = c(names(training_set[,-c(54)]),"problem_id"))
 
-   str(testing_set)
+   testing_set<-subset(testing,select = c(names(training_set[,-c(54)]),"problem_id"))
    
  # Creating own training and testing sets
    set.seed(1234)
    inTrain = createDataPartition(training_set$classe, p = 3/4)[[1]]
    p_training = training_set[ inTrain,]
    p_testing = training_set[-inTrain,]
+   
+ # Visually exploring data
+   featurePlot(x = p_training[, 1:16], 
+               y = p_training$classe,
+               plot = "density", 
+               scales = list(x = list(relation="free"), 
+                             y = list(relation="free")), 
+               adjust = 1.5, 
+               pch = "|", 
+               layout = c(4, 4), 
+               auto.key = list(columns = 5))
 
 # Modeling
    set.seed(1234)
    library(caret)
-   library(gbm)
-   library(C50)
    library(doParallel)
+   
    trainctrl<-trainControl(method="repeatedcv"
-                           ,number=10,repeats = 3
-                           ,verboseIter = FALSE
+                           ,number=4,repeats = 3
+                           ,verboseIter = TRUE
                            ,allowParallel = TRUE)
    
-   # preprocess<-c("center", "scale")
-   # myTuneGrid <- expand.grid(n.trees = 1:100,interaction.depth = 2:4,shrinkage = 0.1)
-   
+   preprocess<-c("center", "scale")
+   myGrid<-expand.grid(mtry=seq(1,50,5))
    cl <- makeCluster(detectCores()-1)
-   registerDoParallel(cl)
+
    
-   # Gradient Boosting Model
+   # Random Forest Model
    registerDoParallel(cl)
-   model.gbm<-train(form = classe~.,
-                   model = "gbm",
+   system.time(
+   model.fit<-train(form = classe ~ .,
+                   model = "rf",
                    data = p_training,
                    metric="Accuracy",
-                   #preProcess = preprocess,
-                   #tuneGrid = myTuneGrid,
+                   preProcess = preprocess,
                    trControl = trainctrl,
+                   tuneGrid = myGrid,
                    verbose=TRUE
    )
+   )
    stopCluster(cl)
-   summary(model.gbm)
-   print(model.gbm)
+   summary(model.fit)
+   print(model.fit)
+   plot(model.fit)
+   plot(model.fit$finalModel)
+   model.fit$finalModel$confusion
    
    # Prediction using our testing set
   
-   pred.gbm<-predict(model.gbm,p_testing)
-   confusionMatrix(p_testing$classe,pred.gbm)
+   pred.fit<-predict(model.fit,p_testing)
+   confusionMatrix(p_testing$classe,pred.fit)
    
    
    # Prediction using the provided testing set
-   pred.test.gbm<-predict(model.gbm,testing_set)
-   summary(pred.test.gbm)
+   pred.test.fit<-predict(model.fit,testing_set)
+   summary(pred.test.fit)
    
-   testing_pred<-cbind(testing_set,pred.test.gbm)
+   testing_pred<-cbind(testing_set,pred.test.fit)
    View(testing_pred[,c(54,55)])
    
  
