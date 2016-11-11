@@ -210,7 +210,7 @@ Now that we have trained the classifier and also performed an out of sample test
 
 ```{r TestTable, echo=TRUE}
     testing_pred<-cbind(testing_set,pred.test.gbm)
-    kable(head(testing_pred[,c(54,55)],5))
+    kable(t(testing_pred[,c(54,55)]))
 ```
 
 ## Conclusion
