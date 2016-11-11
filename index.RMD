@@ -19,7 +19,7 @@ The data used to build this machine learning classifier and the data for the pre
 * [Training Data Set](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv)
 * [Testing Data Set](https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv)
 
-The source for both these datasets is again [Human Activity Recognition](http://groupware.les.inf.puc-rio.br/har)
+The source for both these datasets is [Human Activity Recognition](http://groupware.les.inf.puc-rio.br/har)
 
 ## Loading the Data
 We begin our analysis by first loading a set of R libraries which aid us in various steps of our analysis.
