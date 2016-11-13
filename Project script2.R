@@ -49,6 +49,11 @@
    p_training = training_set[ inTrain,]
    p_testing = training_set[-inTrain,]
 
+   # Trying model search
+   mod1<-lm(classe~.,data = p_training)
+   summary(mod1)$coeff
+   search<-step(mod1,direction = "backward",trace = TRUE)
+   search$anova
 # Modeling
    set.seed(1234)
    library(caret)
