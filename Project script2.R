@@ -60,12 +60,13 @@
    library(doParallel)
    
    trainctrl<-trainControl(method="repeatedcv"
-                           ,number=4,repeats = 3
+                           ,number=5,repeats = 2
                            ,verboseIter = TRUE
-                           ,allowParallel = TRUE)
+                           ,allowParallel = TRUE
+                           )
    
-   preprocess<-c("center", "scale")
-   myGrid<-expand.grid(mtry=seq(1,50,5))
+   preprocess<-c("center", "scale","nzv")
+  # myGrid<-expand.grid(mtry=seq(7,30,7))
    cl <- makeCluster(detectCores()-1)
 
    
@@ -78,7 +79,12 @@
                    metric="Accuracy",
                    preProcess = preprocess,
                    trControl = trainctrl,
-                   tuneGrid = myGrid,
+                   adaptive = list(min = 10, 
+                                   alpha = 0.05, 
+                                   method = "gls",
+                                   complete = TRUE),
+                   #tuneLength=15
+                   #tuneGrid = myGrid,
                    verbose=TRUE
    )
    )
@@ -100,14 +106,14 @@
    summary(pred.test.fit)
    
    testing_pred<-cbind(testing_set,pred.test.fit)
-   View(testing_pred[,c(54,55)])
+   View(testing_pred[,c(53,54)])
    
    trainctrlg<-trainControl(method="repeatedcv"
                            ,number=5,repeats = 3
                            )
    
    library("gbm")
-   preprocess<-c("center", "scale")
+   preprocess<-c("center", "scale","nzv","corr")
    myGbm<-expand.grid(n.trees = seq(200,1000,100),interaction.depth = 2:4,
                       shrinkage = 0.05,n.minobsinnode=20)
    registerDoParallel(cl)
